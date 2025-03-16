@@ -26,6 +26,27 @@ class Brick:  # 因為是物件因此用大寫字母開頭
             py.draw.rect(display_area, self.color, self.rect)
 
 
+class Brick1:  # 因為是物件因此用大寫字母開頭
+    def __init__(self, x, y, width, height, color):
+        """
+        初始化磚塊\n
+        x,y:磚塊的左上角座標\n
+        width,height:磚塊的寬度和高度\n
+        color:磚塊的顏色\n
+        """
+        self.rect = py.Rect(x, y, width, height)  # 磚塊的矩形區域
+        self.color = color  # 磚塊的顏色
+        self.hit = False  # 磚塊是否被擊中
+
+    def draw(self, display_area):
+        """
+        繪製磚塊\n
+        display_area:繪製磚塊的區域\n
+        """
+        if not self.hit:
+            py.draw.rect(display_area, self.color, self.rect)
+
+
 ######################定義函式區######################
 
 ######################初始化設定######################
@@ -61,11 +82,17 @@ for col in range(bricks_col):
 ######################遊戲結束設定######################
 
 ######################主程式######################
+a = False
 while True:
     for event in py.event.get():  # 事件處理
         if event.type == py.QUIT:
             sys.exit()
+    Bricks1 = []
+    x1, y1 = py.mouse.get_pos()  # 取得滑鼠座標
+    y2 = 550
+    a = Brick1(x1, y2)
+    Bricks1.append(a)
     for brick in bricks:
         brick.draw(screen)
-
+    Bricks1.draw(screen)
     py.display.update()  # 更新畫面

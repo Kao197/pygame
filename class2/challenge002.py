@@ -65,7 +65,10 @@ while True:
     for event in py.event.get():  # 事件處理
         if event.type == py.QUIT:
             sys.exit()
+    screen.fill((0, 0, 0))  # 清空畫面
     for brick in bricks:
         brick.draw(screen)
+    x1, y1 = py.mouse.get_pos()  # 取得滑鼠座標
+    py.draw.rect(screen, (255, 255, 255), (x1, 550, 58, 26), 0)  # 繪製紅色方形
 
     py.display.update()  # 更新畫面
