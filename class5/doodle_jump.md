@@ -86,4 +86,146 @@
 - 當玩家踩到消失平台後，該平台會立即消失
 - 不在此平台上生成彈簧
 
-### 步驟 11: 加入圖片資源
+### 步驟 11: 加入圖片資源和精靈系統
+
+- 在載入套件部分，添加 `os` 模組用於處理檔案路徑
+- 在全域變數部分，設定執行路徑為當前檔案位置 `os.chdir(sys.path[0])`
+- 建立 `load_doodle_sprites()` 函式用於載入圖片資源：
+  - 載入主要精靈圖片 (src.png)
+  - 切割不同平台的精靈（standard_platform, break_platform）
+  - 切割彈簧精靈（spring_normal）
+  - 載入玩家角色四個方向的圖片（左跳、左落、右跳、右落）
+  - 使用字典儲存所有精靈資源
+  - 實現完整的錯誤處理機制（包含找不到圖片和切割錯誤的處理）
+  - 精靈圖片位置說明：
+    - 標準平台：(0, 0, 116, 30)
+    - 可破壞平台：(0, 145, 124, 33)
+    - 普通彈簧：(376, 188, 71, 35)
+    - 玩家圖片：載入 l.png (左跳)、ls.png (左落)、r.png (右跳)、rs.png (右落)
+- 修改各物件類別以支援圖片繪製：  
+  - Player 類別：
+    - 添加 sprites 參數到 __init__，用於儲存精靈圖片
+    - 添加 facing_right 屬性追蹤面向方向（預設向右）
+    - 添加 jumping 屬性追蹤跳躍狀態（垂直速度小於0為跳躍中）
+    - 修改 draw 方法：
+      - 根據面向方向和跳躍狀態選擇對應精靈
+      - 若有精靈圖片則使用精靈，否則使用矩形
+      - 自動調整精靈大小以符合角色實際尺寸
+    - 修改 move 方法自動更新 facing_right 屬性
+    - 修改 apply_gravity 方法自動更新 jumping 屬性
+  - Platform 類別：
+    - 添加 sprites 參數到 __init__
+    - 修改 draw 方法：
+      - 特殊平台使用 break_platform 精靈
+      - 一般平台使用 std_platform 精靈
+      - 特殊平台且已被踩過時不繪製
+      - 無精靈時使用矩形代替
+  - Spring 類別：
+    - 添加 sprites 參數到 __init__
+    - 修改 draw 方法使用 spring_normal 精靈
+    - 調整彈簧尺寸為 35x20 像素以符合精靈圖片大小
+- 調整遊戲物件尺寸和屬性：
+  - 主角調整：
+    - 尺寸從 30x30 改為 50x50 像素以符合精靈圖片尺寸
+    - 顏色保持為綠色 (0, 255, 0)
+  - 平台調整：
+    - 尺寸從 60x10 改為 80x20 像素以配合精靈圖片比例
+    - 顏色從白色改為深灰色 (100, 100, 100)
+  - 彈簧調整：
+    - 尺寸從 20x10 改為 35x20 像素以符合精靈圖片
+    - 顏色保持為黃色 (255, 215, 0)
+  
+- 視覺風格全面優化：
+  - 遊戲背景從黑色改為白色 (255, 255, 255)
+  - 文字顏色從白色改為黑色 (0, 0, 0)，涵蓋：
+    - 分數顯示
+    - 遊戲結束訊息
+    - 最高分顯示
+  
+- 程式結構優化和錯誤處理：
+  - 圖片載入機制：
+    - 將載入程式碼移至初始化階段
+    - 確保在設定視窗模式之後執行
+    - 添加 use_sprites 全域變數控制精靈系統
+  - 錯誤處理機制：
+    - 圖片載入失敗時自動切換為簡單圖形模式
+    - 輸出具體的錯誤訊息以便偵錯
+  - 物件生成優化：
+    - 主角、平台和彈簧建立時都傳入精靈參數
+    - 重置遊戲時確保傳入精靈參數
+  
+- 動畫系統實現：
+  - 角色動畫控制：
+    - 根據水平移動方向自動更新面向
+    - 根據垂直速度判定跳躍/下落狀態
+    - 自動選擇對應狀態的精靈圖片
+  - 精靈渲染優化：
+    - 確保圖片大小與物件實際尺寸一致
+    - 使用 scale 調整精靈尺寸
+    - 位置對齊採用中心點對齊方式
+
+```python
+def load_doodle_sprites():
+    """
+    載入遊戲所需的圖片資源\n
+    - 從source圖片切割各種平台和彈簧精靈\n
+    - 載入玩家角色四個方向的圖片\n
+    return: 包含所有精靈的字典\n
+    """
+    # 載入主要圖片資源
+    img_path = os.path.join("image", "src.png")
+    source_image = pygame.image.load(img_path).convert_alpha()  # 載入圖片並轉換為帶Alpha通道的格式
+
+    # 定義精靈在原始圖片中的座標和尺寸
+    sprite_data = {
+        # 各種平台的座標和尺寸 (x, y, 寬, 高)
+        "std_platform": (0, 0, 116, 30),  # 標準平台
+        "break_platform": (0, 145, 124, 33),  # 可破壞平台
+        # 彈簧
+        "spring_normal": (376, 188, 71, 35),  # 普通彈簧
+        # 玩家角色圖片路徑
+        "player_left_jumping": os.path.join("image", "l.png"),  # 左跳躍
+        "player_left_falling": os.path.join("image", "ls.png"),  # 左下落
+        "player_right_jumping": os.path.join("image", "r.png"),  # 右跳躍
+        "player_right_falling": os.path.join("image", "rs.png"),  # 右下落
+    }  # 切割精靈圖片並存入字典
+    sprites = {}
+    for name, data in sprite_data.items():
+        if name.startswith("player_"):
+            # 直接從檔案載入玩家角色圖片
+            try:
+                sprites[name] = pygame.image.load(data).convert_alpha()
+            except Exception as e:
+                print(f"無法載入玩家圖片 {name}: {e}")
+        else:
+            try:
+                # 從主圖片切割出所需的精靈
+                x, y, width, height = data  # 解包四個值
+                sprites[name] = source_image.subsurface(pygame.Rect(x, y, width, height))
+            except ValueError as e:
+                print(f"無法切割 {name}: {e}")  # 如果切割失敗，輸出錯誤訊息
+
+    return sprites  # 返回包含所有精靈的字典
+```
+
+```python
+# 載入圖片的實現範例
+try:
+    # 載入遊戲所需的所有精靈圖片（需要在設置視窗模式後進行）
+    sprites = load_doodle_sprites()
+    use_sprites = True  # 標記是否使用精靈圖片
+    print(f"成功載入 {len(sprites)} 個精靈圖片")
+except Exception as e:
+    # 如果載入失敗，使用簡單的幾何圖形代替
+    print(f"載入精靈圖片時發生錯誤: {e}")
+    print("將使用簡單圖形進行遊戲")
+    sprites = None
+    use_sprites = False  # 標記不使用精靈圖片
+```
+
+```python
+# 物件建立時使用精靈圖片的範例
+player = Player(player_x, player_y, player_w, player_h, (0, 255, 0), sprites if use_sprites else None)
+platform = Platform(platform_x, platform_y, platform_w, platform_h, (100, 100, 100), False, sprites if use_sprites else None)
+spring = Spring(spring_x, spring_y, spring_w, spring_h, (255, 215, 0), sprites if use_sprites else None)
+```
