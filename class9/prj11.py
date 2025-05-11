@@ -520,11 +520,11 @@ while True:
         if keys[py.K_LEFT]:  # 如果按下左方向鍵
             player.move(-1, bg_x)  # 向左移動
             player.direction = -1  # 設定面向方向為左
-            player.update_image()  # 更新圖片狀態
         if keys[py.K_RIGHT]:  # 如果按下右方向鍵
             player.move(1, bg_x)  # 向右移動
             player.direction = 1  # 設定面向方向為右
-            player.update_image()  # 更新圖片狀態
+
+        player.update_image()  # 更新圖片狀態
 
         # 更新攝影機位置
         if player.rect.y < bg_y * 0.6 and player.rect.y < target_camera_y + bg_y * 0.6:

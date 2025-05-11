@@ -124,6 +124,10 @@
     - 添加 sprites 參數到 __init__
     - 修改 draw 方法使用 spring_normal 精靈
     - 調整彈簧尺寸為 35x20 像素以符合精靈圖片大小
+  - Hat 類別：
+    - 添加 sprites 參數到 __init__
+    - 修改 draw 方法使用 hat 精靈
+    - 調整飛行帽子尺寸為 35x25 像素以符合設定
 - 調整遊戲物件尺寸和屬性：
   - 主角調整：
     - 尺寸從 30x30 改為 50x50 像素以符合精靈圖片尺寸
@@ -134,6 +138,9 @@
   - 彈簧調整：
     - 尺寸從 20x10 改為 35x20 像素以符合精靈圖片
     - 顏色保持為黃色 (255, 215, 0)
+  - 飛行帽子調整：
+    - 尺寸設定為 35x25 像素
+    - 顏色設定為藍色 (0, 0, 255)（無精靈時）
   
 - 視覺風格全面優化：
   - 遊戲背景從黑色改為白色 (255, 255, 255)
@@ -188,6 +195,8 @@ def load_doodle_sprites():
         "player_left_falling": os.path.join("image", "ls.png"),  # 左下落
         "player_right_jumping": os.path.join("image", "r.png"),  # 右跳躍
         "player_right_falling": os.path.join("image", "rs.png"),  # 右下落
+        # 飛行帽子
+        "hat": (682, 485, 52, 39),  # 飛行帽子
     }  # 切割精靈圖片並存入字典
     sprites = {}
     for name, data in sprite_data.items():
@@ -228,4 +237,62 @@ except Exception as e:
 player = Player(player_x, player_y, player_w, player_h, (0, 255, 0), sprites if use_sprites else None)
 platform = Platform(platform_x, platform_y, platform_w, platform_h, (100, 100, 100), False, sprites if use_sprites else None)
 spring = Spring(spring_x, spring_y, spring_w, spring_h, (255, 215, 0), sprites if use_sprites else None)
+hat = Hat(hat_x, hat_y, 35, 25, (0, 0, 255), sprites if use_sprites else None)
 ```
+
+### 步驟 12: 新增飛行帽子精靈和物件
+
+- 修改load_doodle_sprites()函式:
+  - 在sprite_data字典中加入飛行帽子的資訊:
+    ```python
+    sprite_data = {
+        # ...existing code...
+        "hat": (682, 485, 52, 39),  # 飛行帽子
+    }
+    ```
+
+- 建立Hat類別:
+  ```python
+  class Hat:
+      def __init__(self, x, y, width, height, color, sprites=None):
+          self.rect = pygame.Rect(x, y, width, height)
+          self.color = color
+          self.sprites = sprites
+          self.platform = None  # 紀錄帽子所在的平台
+
+      def draw(self, screen):
+          if self.sprites and "hat" in self.sprites:
+              hat_img = self.sprites["hat"]
+              hat_img = pygame.transform.scale(hat_img, (self.rect.width, self.rect.height))
+              screen.blit(hat_img, self.rect)
+          else:
+              pygame.draw.rect(screen, self.color, self.rect)
+
+      def update(self, platform_move):
+          # 跟隨平台移動
+          self.rect.y += platform_move
+  ```
+
+### 步驟 13: 實現飛行帽子功能
+
+- 在全域變數和物件部分:
+  - 設定飛行帽子每3000分會出現一次
+  - 飛行帽子會隨機生成在平台上方，並且不會與平台重疊
+  - 設定飛行帽子尺寸為 35x25 像素
+  - 設定飛行帽子飛行時間為5秒
+  - 設定飛行帽子效果：每幀上升1像素
+
+- 遊戲邏輯更新:
+  - 每3000分在平台上生成飛行帽子
+  - 飛行帽子要跟著平台移動
+  - 當玩家碰到飛行帽子時:
+    - 讓玩家戴上飛行帽子
+    - 飛行帽子會跟隨玩家移動
+    - 玩家進入飛行狀態，持續5秒
+    - 飛行狀態下每幀自動上升1像素
+  - 飛行帽子離開畫面時自動移除
+  - 飛完後飛行帽子會消失
+
+- 視覺效果:
+  - 飛行帽子顏色為藍色 (0, 0, 255)（無精靈時）
+  - 飛行狀態下玩家閃爍提示效果（選擇性實現）
