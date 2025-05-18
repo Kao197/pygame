@@ -153,6 +153,7 @@ class Player:
             )
             hat_image = py.transform.scale(self.sprites["hat"], (hat_width, hat_height))
             display_area.blit(hat_image, hat_rect.topleft)
+            propeller_sound.play() if propeller_sound else None
 
         # 繪製主角圖片
         if self.image and self.sprites:
@@ -229,6 +230,8 @@ class Player:
                         # 新增: 如果是特殊平台，碰到後立即消失
                         if platform.is_special:
                             platform.is_vanished = True
+                            broke_sound.play() if broke_sound else None
+
                         return True
         return False
 
@@ -495,6 +498,19 @@ try:
 except Exception as e:
     print(f"載入音效檔案時發生錯誤: {e}")
     spring_sound = None  # 如果載入失敗，設為None
+try:
+    broke_sound = py.mixer.Sound("sound/broke.mp3")
+    print("音效載入成功")
+except Exception as e:
+    print(f"載入音效檔案時發生錯誤: {e}")
+    broke_sound = None  # 如果載入失敗，設為None
+try:
+    propeller_sound = py.mixer.Sound("sound/propeller.mp3")
+    print("音效載入成功")
+except Exception as e:
+    print(f"載入音效檔案時發生錯誤: {e}")
+    propeller_sound = None
+
 ######################遊戲視窗設定######################
 bg_x = 400  # 視窗寬度
 bg_y = 600  # 視窗高度
