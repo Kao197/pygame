@@ -231,3 +231,37 @@
   - 每幀遍歷 `emy_list`，分別呼叫每台敵機的 `move()` 與 `draw(screen)` 方法。
   - 敵機會自動在畫面底部重生，形成無限下落的效果。
 - 這樣設計可讓敵機持續出現在畫面上，並且分布隨機，為後續碰撞與分數系統做準備。
+### 步驟 10: 子彈碰撞檢測
+- 新增一個 `CollisionManager` 類別，專門負責處理遊戲中的碰撞檢測邏輯。
+- 主要功能：
+  - 檢查玩家飛彈是否擊中敵機。
+  - 後續可擴充：檢查玩家與敵機碰撞、敵機子彈與玩家碰撞等
+- `CollisionManager` 的初始化方法 `__init__` 需接收以下參數：
+  - `enemy_list`：敵機物件列表（每個為 Enemy 實例）
+  - `missile_list`：飛彈物件列表（每個為 Missile 實例）
+- 建立`is_hit`方法:使用距離公式（x1-x2）^2 + (y1-y2)^2 < r^2 判斷兩個物件是否碰撞。
+  - `is_hit` 方法接收兩個物件（如飛彈和敵機）和 半徑 `r`作為參數，計算兩者中心點距離是否小於 `r`。
+- 建立`check_collision`方法:
+  - 遍歷所有飛彈與敵機，使用 `is_hit` 方法檢查是否有碰撞。
+  - 若有碰撞，敵機設為reset狀態，飛彈設為不活躍。
+  ### 步驟 11: 聲音與分數系統
+- 新增 `score_Manager` 類別，新增一個 `score` 屬性來記錄玩家分數，初始值為 0。
+  初始化函式設定：
+  -  分數變數 self.score
+  -  顯示字體 self.font,
+  -  顯示位置 self.pos 與顏色 self.color,
+  方法：
+  - 增加方法 `add_score(points)` 來增加分數。
+  - 增加方法 `deduct_score` 來減分數。
+  - 增加方法 `score_reset` 來reset分數。
+  - 增加方法 `draw_score` 來在螢幕上繪製分數。
+- 新增 `sound_Manager` 類別。
+  - 在 `__init__` 方法中載入音效檔案。
+  - 新增 `play_sound` 方法來播放音效。
+- 在主程式中，新增一個顯示分數的函式 `draw_score`：
+  - 使用 `font = pygame.font.Font("C:/Windows/Fonts/msjh.ttc", 32)` 創建字體物件
+- 載入音效檔案：
+  - 在圖片載入區塊，載入音效檔案：
+    ```python
+    sound_explosion = pygame.mixer.Sound("class13\image\hit.mp3")  # 載入爆炸音效
+    ```
