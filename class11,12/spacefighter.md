@@ -98,7 +98,7 @@
   - 在 `__init__` 方法中將 `burner_img` 設為火焰動畫用圖片
   - 添加火焰動畫相關屬性及方法
   - 設定變數 `burn_shift` 控制火焰上下晃動
-  - 每幀更新位移值：`burn_shift = (burn_shift + 2) % 12`  # 循環0~11
+  - 每幀更新位移值：`burn_shift = (burn_shift + 1) % 12`  # 循環0~11
   - 火焰寬度動態設為太空船寬度的1/4，高度等比例縮放
   - 火焰固定在太空船底部，但有微小的位移變化
 - 修改 `Player` 類的 `draw` 方法：
@@ -265,3 +265,58 @@
     ```python
     sound_explosion = pygame.mixer.Sound("class13\image\hit.mp3")  # 載入爆炸音效
     ```
+### 步驟 12: 添加火焰推進效果(敵機)
+- 擴展 `Enemy` 類別：
+  - 新增初始化參數 `burner_img`，讓使用者可自訂傳入火焰圖片
+  - 在 `__init__` 方法中將 `burner_img` 設為火焰動畫用圖片
+  - 添加火焰動畫相關屬性及方法
+  - 設定變數 `burn_shift` 控制火焰上下晃動
+  - 每幀更新位移值：`burn_shift = (burn_shift + 1) % 12`  # 循環0~11
+  - 火焰寬度動態設為太空船寬度的1/4，高度等比例縮放
+  - 火焰固定在太空船底部，但有微小的位移變化
+  - 使用 `pygame.transform.rotate()` 方法動態調整火焰圖片方向(向上)
+  - 把火焰繪製於敵機尾端(頂部中間位置)
+- 修改 `Player` 類的 `draw` 方法：
+  - 先繪製火焰，再繪製太空船，確保正確的圖層順序
+  - 計算火焰與太空船的相對位置關係，並根據太空船寬度動態調整火焰寬度
+- 獲取火焰圖片的尺寸以便精確定位
+### 步驟 13: 敵機爆炸效果
+- 擴展 `Enemy` 類別：
+  - 新增 `is_exploded` 屬性來記錄敵機是否已經爆炸。
+  - 新增 `exp_count` 屬性來記錄目前偵數。
+  - 新增 `exp_max` 屬性來記錄爆炸圖片的最大偵數(每張圖顯示5偵，共5張圖，共25偵)。
+  - 新增 `explode()` 方法來處理敵機爆炸邏輯：
+    - 當敵機被擊中時，設定 `is_exploded` 為 `True`。
+    - 每次呼叫 `explode()` 時，增加 `exp_count`。
+    - 當 `exp_count` 超過 `exp_max` 時，重置敵機狀態。
+    - `move()` :爆炸時不再移動，直到爆炸結束。
+    - `reset()` :重置敵機狀態。
+  - 新增 `draw_explosion()` 方法來繪製爆炸效果：    
+    - 根據 `exp_count` 顯示對應的爆炸圖片。
+
+- 擴展 `CollisionManager` 類別：
+  - 在 `check_collision` 方法中，當檢測到飛彈與敵機碰撞時，呼叫敵機的 `explode()` 方法。
+- 新增 `explosion_imgs` 列表來儲存爆炸圖片(`explosion1.png`到`explosion5.png`)。
+### 步驟 14: 實現太空船無敵效果
+
+-   類別 Player
+
+    -   新增屬性：
+        -   invincible：布林值，表示太空船是否處於無敵狀態
+        -   invincible_time：整數，記錄無敵剩餘幀數
+    -   新增方法：
+        -   take_damage(invincible_duration=60)：當太空船未處於無敵狀態時，呼叫此方法會啟動無敵狀態，並將 invincible_time 設為指定幀數（預設 60，約 1 秒）。可於此方法中加入受傷音效或特效
+        -   update()：每幀自動遞減 invincible_time，當歸零時自動解除無敵狀態
+    -   更新方法：
+        -   draw(screen)：無敵期間太空船會閃爍顯示（例如每 4 幀隱藏一次），以提示玩家目前處於無敵狀態，其餘繪圖邏輯不變
+
+-   類別 CollisionManager
+
+    -   新增/更新方法：
+        -   check_collisions()：
+            -   檢查太空船與敵機碰撞時，若太空船未處於無敵狀態，則呼叫 player.take_damage() 並啟動無敵
+            -   敵機同時觸發爆炸動畫
+
+-   在主程式主迴圈中，每幀呼叫 player.update() 以更新無敵狀態。
+
+這樣設計可確保太空船被敵機碰撞後短暫無敵，並以閃爍效果提示玩家，防止連續受傷。
